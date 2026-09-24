@@ -1,0 +1,7 @@
+mineskin:
+  # MineSkin V2 API key. Editing and saving do not require this.
+  api-key: ''
+  # PUBLIC, UNLISTED, or PRIVATE. PRIVATE may depend on your MineSkin plan.
+  visibility: UNLISTED
+  # Useful only for debugging generated 64x64 skin PNGs.
+  keep-generated-png: false
