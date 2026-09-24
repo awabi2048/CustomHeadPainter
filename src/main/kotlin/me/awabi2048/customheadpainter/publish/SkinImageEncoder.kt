@@ -3,7 +3,7 @@ package me.awabi2048.customheadpainter.publish
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
-import javax.imageio.ImageIo
+import javax.imageio.ImageIO
 import me.awabi2048.customheadpainter.model.HeadCanvas
 import me.awabi2048.customheadpainter.model.HeadFace
 import me.awabi2048.customheadpainter.model.HeadLayer
