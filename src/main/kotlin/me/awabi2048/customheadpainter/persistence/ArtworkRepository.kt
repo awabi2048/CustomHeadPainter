@@ -7,7 +7,7 @@ import me.awabi2048.customheadpainter.model.HeadArtwork
 import me.awabi2048.customheadpainter.model.HeadCanvas
 import me.awabi2048.customheadpainter.model.HeadFace
 import me.awabi2048.customheadpainter.model.HeadLayer
-import org.bukkkit.configuration.file.YamlConfiguration
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.plugin.java.JavaPlugin
 
 class ArtworkRepository(
