@@ -59,6 +59,7 @@ class EditorManager(
             renderer.despawn(session)
         }
         sessions.clear()
+        publisher.shutdown()
     }
 
     fun session(player: Player): EditorSession? = sessions[player.uniqueId]
