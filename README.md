@@ -34,11 +34,11 @@ Paper 26.1.2向けの、ゲーム内完結型カスタムプレイヤーヘッ�
 
 - Java 25
 - Kotlin 2.3.20
-- Maven
+- Gradle（同梱の Wrapper を使用）
 - Paper API 26.1.2
 
 ```bash
-mvn clean verify
+./gradlew clean build
 ```
 
 ## MineSkin
