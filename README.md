@@ -41,6 +41,12 @@ Paper 26.1.2向けの、ゲーム内完結型カスタムプレイヤーヘッ�
 ./gradlew clean build
 ```
 
+## ローカライズ
+
+- `ja_jp` / `en_us` の埋込カタログをプラグイン内部に持ち、CC-Systemには依存しない。
+- プレイヤーへはクライアントlocaleで表示し、コンソールや未対応localeには `config.yml` の `language`（既定 `ja_jp`）を使う。
+- キー・値型・プレースホルダーの全locale一致は起動時と `./gradlew test` で検証される。
+
 ## MineSkin
 
 `plugins/CustomHeadPainter/config.yml` の `mineskin.api-key` にV2 API keyを設定する。API keyがない場合も編集・保存は利用できる。
