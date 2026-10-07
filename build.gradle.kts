@@ -62,6 +62,8 @@ tasks.processResources {
 tasks.shadowJar {
     archiveBaseName.set("CustomHeadPainter")
     archiveClassifier.set("")
+    // 重複ファイルを警告として可視化する（kotlin_module マージの黙殺を防ぐ）
+    duplicatesStrategy = DuplicatesStrategy.WARN
     // 他プラグインが別バージョンの MineSkin client を同梱していても衝突しないよう退避する
     relocate("org.mineskin", "me.awabi2048.customheadpainter.libs.mineskin")
     // pom.xml の shade フィルタ相当（依存JAR含め署名とマニフェストを除外）

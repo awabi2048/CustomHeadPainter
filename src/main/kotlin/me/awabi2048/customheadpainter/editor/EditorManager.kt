@@ -2,14 +2,14 @@ package me.awabi2048.customheadpainter.editor
 
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import me.awabi2048.customheadpainter.localization.PainterI18n
+import me.awabi2048.customheadpainter.localization.generated.HeadPainterKeys
 import me.awabi2048.customheadpainter.model.HeadArtwork
 import me.awabi2048.customheadpainter.model.HeadLayer
 import me.awabi2048.customheadpainter.model.PaintTool
 import me.awabi2048.customheadpainter.persistence.ArtworkRepository
 import me.awabi2048.customheadpainter.publish.HeadItemFactory
 import me.awabi2048.customheadpainter.publish.MineSkinPublisher
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.entity.Interaction
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
@@ -25,7 +25,10 @@ class EditorManager(
     private val interactionOwners = ConcurrentHashMap<UUID, UUID>()
 
     fun startNew(player: Player, name: String): EditorSession {
-        val artwork = HeadArtwork(owner = player.uniqueId, name = name.ifBlank { "Untitled Head" })
+        val artwork = HeadArtwork(
+            owner = player.uniqueId,
+            name = name.ifBlank { PainterI18n.text(player, HeadPainterKeys.ARTWORK_UNTITLED) },
+        )
         return start(player, artwork)
     }
 
@@ -93,18 +96,33 @@ class EditorManager(
     fun publish(player: Player): Boolean {
         val session = sessions[player.uniqueId] ?: return false
         repository.save(session.artwork)
-        player.sendMessage(Component.text("Publishing head texture...", NamedTextColor.YELLOW))
+        player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_PUBLISH_STARTED))
+
+        if (!publisher.isConfigured()) {
+            player.sendMessage(
+                PainterI18n.component(
+                    player,
+                    HeadPainterKeys.COMMAND_PUBLISH_FAILED,
+                    "reason" to PainterI18n.text(player, HeadPainterKeys.COMMAND_PUBLISH_FAILED_NO_API_KEY),
+                ),
+            )
+            return true
+        }
 
         publisher.publish(session.artwork).whenComplete { skin, throwable ->
             plugin.server.scheduler.runTask(plugin, Runnable {
                 if (!player.isOnline) return@Runnable
                 if (throwable != null) {
-                    plugin.logger.warning("Failed to publish artwork ${session.artwork.id}: ${throwable.message}")
-                    player.sendMessage(
-                        Component.text(
-                            "Publish failed: ${rootMessage(throwable)}",
-                            NamedTextColor.RED,
+                    val reason = rootMessage(throwable)
+                    plugin.logger.warning(
+                        PainterI18n.console(
+                            HeadPainterKeys.LOG_PUBLISH_FAILED,
+                            "id" to session.artwork.id,
+                            "reason" to reason,
                         ),
+                    )
+                    player.sendMessage(
+                        PainterI18n.component(player, HeadPainterKeys.COMMAND_PUBLISH_FAILED, "reason" to reason),
                     )
                     return@Runnable
                 }
@@ -114,7 +132,7 @@ class EditorManager(
                 val item = HeadItemFactory.create(session.artwork.name, skin)
                 val leftovers = player.inventory.addItem(item)
                 leftovers.values.forEach { player.world.dropItemNaturally(player.location, it) }
-                player.sendMessage(Component.text("Published and added the head to your inventory.", NamedTextColor.GREEN))
+                player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_PUBLISH_SUCCESS))
             })
         }
         return true

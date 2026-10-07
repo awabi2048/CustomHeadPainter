@@ -1,3 +1,6 @@
+# コンソールや未対応localeのプレイヤーへ適用する既定言語（ja_jp / en_us）
+language: ja_jp
+
 mineskin:
   # MineSkin V2 API key. Editing and saving do not require this.
   api-key: ''

@@ -2,11 +2,11 @@ package me.awabi2048.customheadpainter.command
 
 import java.util.UUID
 import me.awabi2048.customheadpainter.editor.EditorManager
+import me.awabi2048.customheadpainter.localization.PainterI18n
+import me.awabi2048.customheadpainter.localization.generated.HeadPainterKeys
 import me.awabi2048.customheadpainter.model.HeadLayer
 import me.awabi2048.customheadpainter.model.PaintTool
 import me.awabi2048.customheadpainter.persistence.ArtworkRepository
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
@@ -23,51 +23,52 @@ class HeadPaintCommand(
         args: Array<out String>,
     ): Boolean {
         val player = sender as? Player ?: run {
-            sender.sendMessage("This command is player-only.")
+            sender.sendMessage(PainterI18n.console(HeadPainterKeys.COMMAND_PLAYER_ONLY))
             return true
         }
         if (!player.hasPermission("customheadpainter.use")) {
-            player.sendMessage(Component.text("You do not have permission.", NamedTextColor.RED))
+            player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_NO_PERMISSION))
             return true
         }
 
         when (args.firstOrNull()?.lowercase() ?: "help") {
             "start" -> {
-                val name = args.drop(1).joinToString(" ").ifBlank { "Untitled Head" }
-                val session = manager.startNew(player, name)
+                val session = manager.startNew(player, args.drop(1).joinToString(" "))
                 player.sendMessage(
-                    Component.text("Started editor ${session.artwork.id}", NamedTextColor.GREEN),
+                    PainterI18n.component(player, HeadPainterKeys.COMMAND_STARTED, "id" to session.artwork.id),
                 )
             }
             "open" -> {
                 val id = args.getOrNull(1)?.let { runCatching { UUID.fromString(it) }.getOrNull() }
                 if (id == null || manager.open(player, id) == null) {
-                    player.sendMessage(Component.text("Artwork not found or not accessible.", NamedTextColor.RED))
+                    player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_ARTWORK_NOT_FOUND))
                 } else {
-                    player.sendMessage(Component.text("Opened artwork $id", NamedTextColor.GREEN))
+                    player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_OPENED, "id" to id))
                 }
             }
             "stop" -> {
                 manager.stop(player)
-                player.sendMessage(Component.text("Editor closed.", NamedTextColor.GRAY))
+                player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_STOPPED))
             }
             "save" -> {
                 val artwork = manager.save(player)
                 if (artwork == null) {
                     noSession(player)
                 } else {
-                    player.sendMessage(Component.text("Saved ${artwork.id}", NamedTextColor.GREEN))
+                    player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_SAVED, "id" to artwork.id))
                 }
             }
             "publish" -> if (!manager.publish(player)) noSession(player)
             "color" -> {
                 val argb = args.getOrNull(1)?.let(::parseColor)
                 if (argb == null) {
-                    player.sendMessage(Component.text("Usage: /headpaint color <#RRGGBB|#AARRGGBB>", NamedTextColor.RED))
+                    player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_USAGE_COLOR))
                 } else if (!manager.setColor(player, argb)) {
                     noSession(player)
                 } else {
-                    player.sendMessage(Component.text("Paint color set to ${formatColor(argb)}", NamedTextColor.GREEN))
+                    player.sendMessage(
+                        PainterI18n.component(player, HeadPainterKeys.COMMAND_COLOR_SET, "color" to formatColor(argb)),
+                    )
                 }
             }
             "layer" -> {
@@ -75,11 +76,13 @@ class HeadPaintCommand(
                     runCatching { HeadLayer.valueOf(it.uppercase()) }.getOrNull()
                 }
                 if (layer == null) {
-                    player.sendMessage(Component.text("Usage: /headpaint layer <base|overlay>", NamedTextColor.RED))
+                    player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_USAGE_LAYER))
                 } else if (!manager.setLayer(player, layer)) {
                     noSession(player)
                 } else {
-                    player.sendMessage(Component.text("Layer: ${layer.name.lowercase()}", NamedTextColor.GREEN))
+                    player.sendMessage(
+                        PainterI18n.component(player, HeadPainterKeys.COMMAND_LAYER_SET, "layer" to layerLabel(player, layer)),
+                    )
                 }
             }
             "tool" -> {
@@ -87,20 +90,29 @@ class HeadPaintCommand(
                     runCatching { PaintTool.valueOf(it.uppercase()) }.getOrNull()
                 }
                 if (tool == null) {
-                    player.sendMessage(Component.text("Usage: /headpaint tool <paint|erase>", NamedTextColor.RED))
+                    player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_USAGE_TOOL))
                 } else if (!manager.setTool(player, tool)) {
                     noSession(player)
                 } else {
-                    player.sendMessage(Component.text("Tool: ${tool.name.lowercase()}", NamedTextColor.GREEN))
+                    player.sendMessage(
+                        PainterI18n.component(player, HeadPainterKeys.COMMAND_TOOL_SET, "tool" to toolLabel(player, tool)),
+                    )
                 }
             }
             "list" -> {
                 val artworks = repository.list(player.uniqueId)
                 if (artworks.isEmpty()) {
-                    player.sendMessage(Component.text("No saved artworks.", NamedTextColor.GRAY))
+                    player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_LIST_EMPTY))
                 } else {
                     artworks.take(20).forEach {
-                        player.sendMessage(Component.text("${it.id}  ${it.name}", NamedTextColor.AQUA))
+                        player.sendMessage(
+                            PainterI18n.component(
+                                player,
+                                HeadPainterKeys.COMMAND_LIST_ENTRY,
+                                "id" to it.id,
+                                "name" to it.name,
+                            ),
+                        )
                     }
                 }
             }
@@ -129,18 +141,29 @@ class HeadPaintCommand(
     }
 
     private fun showHelp(player: Player) {
-        player.sendMessage(Component.text("CustomHeadPainter", NamedTextColor.GOLD))
-        player.sendMessage(Component.text("/headpaint start [name]", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("/headpaint color <#RRGGBB|#AARRGGBB>", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("/headpaint layer <base|overlay>", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("/headpaint tool <paint|erase>", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("/headpaint save | publish | stop", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("/headpaint list | open <uuid>", NamedTextColor.GRAY))
+        player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_HELP_TITLE))
+        PainterI18n.componentList(player, HeadPainterKeys.COMMAND_HELP_LINES).forEach(player::sendMessage)
     }
 
     private fun noSession(player: Player) {
-        player.sendMessage(Component.text("Start or open an editor first.", NamedTextColor.RED))
+        player.sendMessage(PainterI18n.component(player, HeadPainterKeys.COMMAND_NO_SESSION))
     }
+
+    private fun layerLabel(player: Player, layer: HeadLayer): String = PainterI18n.text(
+        player,
+        when (layer) {
+            HeadLayer.BASE -> HeadPainterKeys.LAYER_BASE
+            HeadLayer.OVERLAY -> HeadPainterKeys.LAYER_OVERLAY
+        },
+    )
+
+    private fun toolLabel(player: Player, tool: PaintTool): String = PainterI18n.text(
+        player,
+        when (tool) {
+            PaintTool.PAINT -> HeadPainterKeys.TOOL_PAINT
+            PaintTool.ERASE -> HeadPainterKeys.TOOL_ERASE
+        },
+    )
 
     private fun parseColor(input: String): Int? {
         val hex = input.removePrefix("#")
