@@ -1,0 +1,21 @@
+name: CustomHeadPainter
+version: '${project.version}'
+main: me.awabi2048.customheadpainter.CustomHeadPainterPlugin
+api-version: '26.1.2'
+author: awabi2048
+description: In-game voxel editor for creating custom player heads.
+
+commands:
+  headpaint:
+    description: Open and control the custom head editor.
+    usage: /headpaint <start|open|stop|save|publish|color|layer|tool|list>
+    aliases: [hp]
+    permission: customheadpainter.use
+
+permissions:
+  customheadpainter.use:
+    description: Allows use of the CustomHeadPainter editor.
+    default: true
+  customheadpainter.admin:
+    description: Allows opening and editing another player's saved artwork.
+    default: op
